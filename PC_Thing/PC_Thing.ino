@@ -57,7 +57,7 @@ void setup() {
 void loop() {
 
 
-
+  // PC: Gets the current milliseconds tracked internally
   currentMilis = millis();
 
 
@@ -75,27 +75,39 @@ void loop() {
 
   // Write to ThingSpeak. There are up to 8 fields in a channel, allowing you to store up to 8 different
   // pieces of information in a channel.  Here, we write to field 1.
+ 
+  //  PC: If the diffenece since update is greater than 20,000, update ThingSpeak
   if(currentMilis - lastUpdate >= 20000 ){
       int x = ThingSpeak.writeField(myChannelNumber, 1, number, myWriteAPIKey);
       if(x == 200){
       Serial.println("Channel update successful.");
+      // PC: Set the LCD to dark green
       M5.Lcd.fillScreen(TFT_DARKGREEN);
+      // PC: Update the last miliseconds
       lastUpdate = currentMilis;
       }
       else{
         Serial.println("Problem updating channel. HTTP error code " + String(x));
+        // PC: Fill the screen red
         M5.Lcd.fillScreen(TFT_MAROON);
+        // PC: Display the error code
         M5.Lcd.setCursor(30, 30);
         M5.Lcd.println(String(x));
       }
   }
 
+  // PC Begin
+
+  // Update the button states 
   M5.update();
+  // If Button A was Pressed, increase the count
   if(M5.BtnA.wasReleased()) number++;
 
+  // Displat the current number 
   M5.Lcd.setTextSize(3);
   M5.Lcd.setCursor(30, 10);
   M5.Lcd.printf("%d", number);
+  // Display the current miliseconds
   M5.Lcd.setTextSize(2);
   M5.Lcd.setCursor(50, 10);
   M5.Lcd.printf("%d", currentMilis);

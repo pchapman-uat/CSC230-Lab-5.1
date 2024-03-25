@@ -69,6 +69,7 @@ void loop() {
 
 
 
+  // Set the current miliseconds
   currentMilis = millis();
 
 
@@ -87,11 +88,14 @@ void loop() {
   // Write to ThingSpeak. There are up to 8 fields in a channel, allowing you to store up to 8 different
   // pieces of information in a channel.  Here, we write to field 1.
   if(currentMilis - lastUpdate >= 20000 ){
+      // Based on the field, set the proper data
       int data = 0;
       if(field == 1) data = btnA;
-      if(field == 2) data = temp;
-      if(field == 3) data = maxZ * 100;
+      else if(field == 2) data = temp;
+      // Acceleration is multiplied by 100, as ThingSpeak only tracks ints
+      else if(field == 3) data = maxZ * 100;
 
+      // Write to the corisponding field with the data
       int x = ThingSpeak.writeField(myChannelNumber, field, data, myWriteAPIKey);
       if(x == 200){
       Serial.println("Channel update successful.");
@@ -108,6 +112,7 @@ void loop() {
 
   M5.update();
 
+  // If button B was pressed, incroment the field, while capping it at 3
   if(M5.BtnB.wasReleased()){
     field++;
     if(field > 3) field = 1;
@@ -115,31 +120,42 @@ void loop() {
   }
 
 
-
+  // Ready to display the data
   M5.Lcd.setTextSize(3);
   M5.Lcd.setCursor(30, 10);
 
   if(field == 1){
+    // Increase the btnA count if it was pressed
     if(M5.BtnA.wasReleased()) btnA++;
+    // Display the value
     M5.Lcd.printf("%d", btnA);
+    // Display the mode
     M5.Lcd.setCursor(30,30);
     M5.Lcd.setTextSize(2);
     M5.Lcd.println("Mode: Button A");
   } else if(field == 2){
+    // Get the tempature and bind it to the temp 
     M5.Imu.getTempData(&temp);
     M5.Lcd.printf("%5.2f", temp);
+    // Display the mode
     M5.Lcd.setCursor(30,30);
     M5.Lcd.setTextSize(2);
     M5.Lcd.println("Mode: Temp");
   } else if (field == 3){
+    // Get the acceleration data
     M5.Imu.getAccelData(&accX, &accY, &accZ);
+    // If the current acceleration is more than the recorded max, update max
     if(accZ >= maxZ) maxZ = accZ;
+    // If button A was pressed reset max
     if(M5.BtnA.wasReleased()) maxZ = 0;
+    // Display max value
     M5.Lcd.printf("%5.2f", maxZ);
+    // Display current mode
     M5.Lcd.setCursor(30,30);
     M5.Lcd.setTextSize(2);
     M5.Lcd.println("Mode: Max Acc Z");
   }
+  // Display current miliseconds
   M5.Lcd.setTextSize(2);
   M5.Lcd.setCursor(30, 60);
   M5.Lcd.printf("%d", currentMilis);
